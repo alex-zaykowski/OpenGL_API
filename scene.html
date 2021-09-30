@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<body>
+
+<h1>My First Heading</h1>
+<p>My first paragraph.</p>
+<script src="scene_graph_3d.js"></script>
+<script>
+let node3 = new CompoundObject();
+let node2 = new CompoundObject();
+let node = new CompoundObject( node2, node3 );
+node.showChildren();
+</script>
+
+</body>
+</html>
