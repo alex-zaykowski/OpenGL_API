@@ -35,6 +35,9 @@ class CompoundObject extends SceneGraphNode {
     this.children.push(node);
     return this;
   }
+  /**
+   * TODO: Add clone method
+   */
   doDraw() {
     for (let child of this.children) {
       child.doDraw(); //why is this draw() in the API what if we need multiple CompoundObjects
@@ -42,6 +45,19 @@ class CompoundObject extends SceneGraphNode {
   }
 }
 
+/**
+ * TODO: Add Camera object
+ */
+
+/**
+ * Polyhedron is a class to create a polyhedron gives faces, normals and vertices.
+ * It mainly is designed to work with polyhedra.js and can draw any polyhedron geometry
+ * given the parameters follow the same structure used in polyhedra.js
+ * 
+ * @faces - 2D array of vertex indices for each face
+ * @vetices - 2D array of vertices
+ * @normals - 2D array of normal values
+ */
 class Polyhedron extends SceneGraphNode {
   constructor(faces, vertices, normals) {
     super();
@@ -50,10 +66,9 @@ class Polyhedron extends SceneGraphNode {
     this.normals = normals;
     this.faceCoords = [];
     this.normalCoords = [];
-    this.colors = [];
     this.generateCoords();
-    this.generateColors();
   }
+  //method to generate the face and normal coordinates using a 2D array of vertices, faces, and normals
   generateCoords() {
     for (let i = 0; i < this.faces.length; i++) {
       let face = this.faces[i];
@@ -82,28 +97,8 @@ class Polyhedron extends SceneGraphNode {
       }
     }
   }
-  generateColors() {
-    for (let i = 0; i < this.faces.length; i++) {
-      let face = this.faces[i];
-      let r = 0.5 + 0.5 * Math.random();
-      let g = 0.2 + 0.5 * Math.random();
-      let b = 0.2 + 0.5 * Math.random();
-      for (let vertex = 0; vertex < face.length - 1; vertex++) {
-        this.colors.push(r);
-        this.colors.push(g);
-        this.colors.push(b);
-
-        this.colors.push(r);
-        this.colors.push(g);
-        this.colors.push(b);
-
-        this.colors.push(r);
-        this.colors.push(g);
-        this.colors.push(b);
-      }
-    }
-  }
   doDraw() {
+    //set the coordinate arrays to Float32Arrays
     this.normalCoords = new Float32Array(this.normalCoords);
     this.faceCoords = new Float32Array(this.faceCoords);
     this.colors = new Float32Array(this.colors);
