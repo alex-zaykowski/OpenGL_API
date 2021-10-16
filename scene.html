@@ -1,17 +1,108 @@
 <!DOCTYPE html>
 <html>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="main.css">
+
 <body>
+    <div id="content">
+        <div id="header">
+            <h1>OpenGL 1.1 API</h1>
+        </div>
+        <script src="glsim.js"></script>
+        <script src="polyhedra.js"></script>
+        <script src="scene_graph_3d.js"></script>
+        <script>
+            let canvas; // variable to contain the canvas
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
-<script src="scene_graph_3d.js"></script>
-<script>
-let node3 = new CompoundObject();
-let node2 = new CompoundObject();
-let node = new CompoundObject( node2, node3 );
-node.showChildren();
-</script>
+            // Displays the current scene, all drawing is done here...
+            function display() {
+                // ------------- set up camera and canvas -------------------------------------------
+                canvas = document.getElementById("glcanvas"); // get the canvas context from the HTML
 
+                glClearColor(0, 0, 0, 1); // background color is black
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                camera.apply();
+                // -----------------------------------------------------------------------------------
+
+                /**
+                 * This is where the scene graph API will be used to draw the scene
+                 **/
+                let scene = new CompoundObject();
+                let pole = new CompoundObject();
+
+                let cube = new TransformedObject(
+                    new Polyhedron(cubeIFS.faces, cubeIFS.vertices, cubeIFS.faceNormals)
+                        .setColor(0.5, 0.3, 0)
+                )
+                    .setScale(0.2, 2, 0.2)
+                    .setTranslation(0, -4, 0);
+
+                let cube2 = new TransformedObject(
+                    new Polyhedron(cubeIFS.faces, cubeIFS.vertices, cubeIFS.faceNormals)
+                        .setColor(0.9, 1, 0.2))
+                    .setTranslation(0, 4, 0);
+
+                pole.add(cube);
+                pole.add(cube2);
+
+                let streetLight = new TransformedObject(pole).setScale(0.3);
+
+                scene.add(streetLight);
+                scene.draw(scene);
+            }
+
+            // ------------------------- initialization functions -----------------------------------
+
+            /**
+             *  initGL() is called just once, by main(), to do initialization of OpenGL state
+             *  and other global state.
+             */
+
+            function initGL() {
+                glClearColor(0.0, 0.0, 0.0, 1.0); // background color
+                glEnable(GL_DEPTH_TEST);      // Required for 3D drawing, not usually for 2D.
+                glEnable(GL_LIGHTING);        // Enable lighting.
+                glEnable(GL_LIGHT0);          // Turn on a light.  By default, shines from direction of viewer.
+                glEnable(GL_NORMALIZE);       // OpenGL will make all normal vectors into unit normals
+                glEnable(GL_COLOR_MATERIAL);  // Material ambient and diffuse poly.colors can be set by glColor*
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);  // Make OpenGL draw back sides of triangles.
+                glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.1, 0.1, 0.1, 1]); // Add some ambient light.
+            }
+
+            function init() {  // Called  when the page has loaded.
+                try {
+                    glsimUse("glcanvas"); // OpenGL will draw to the canvas with id="glcanvas".
+                }
+                catch (e) {
+                    document.getElementById("canvas-holder").innerHTML =
+                        "Sorry, an error occured:<br>" + e;
+                    return;
+                }
+                initGL();
+                camera = new Camera();
+                camera.setScale(10);
+                camera.lookAt(0, 0, 20);
+                camera.installTrackball(display);
+                display();  // Call display() when the page is first loaded.
+            }
+
+            window.onload = init;
+        </script>
+
+        <div id="canvas-holder">
+            <!-- You can set the size of the drawing area in the next line -->
+            <canvas id="glcanvas" width="600" height="600"></canvas>
+        </div>
+
+        <div id="menu">
+            <h1>Examples:</h1>
+            <ul>
+                <li><a href="#">Example 1</a></li>
+                <li><a href="#">Example 2</a></li>
+                <li><a href="#">Example 3</a></li>
+            </ul>
+        </div>
+    </div>
 </body>
+
 </html>

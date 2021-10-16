@@ -1,0 +1,43 @@
+body {
+    background-image: url("te_gray.gif");
+}
+
+#header {
+    width: 300px;
+    height: 60px;
+    color: white;
+    font-family: Helvetica;
+    background-color: #007bff;
+    text-align: center;
+    line-height: 60px;
+}
+
+#menu {
+    float: right;
+    margin-right: 20%;
+    width: 200px;
+    height: 200px;
+    color: white;
+    background-color: #007bff;
+    font-family: Helvetica;
+    border: 4px solid rgb(180, 180, 180);
+    padding: 10px;
+}
+
+#menu ul li a {
+    text-decoration: none;
+    color: white;
+}
+
+#menu ul li {
+    margin-top: 10px;
+}
+
+canvas {
+    float: left;
+    border: 4px solid #007bff;
+}
+
+#content {
+    margin-left: 5%;
+}

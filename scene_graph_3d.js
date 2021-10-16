@@ -1,69 +1,186 @@
-class SceneGraphNode{
-  constructor(){
-    this.fillColor = null;
-    this.strokeColor = null;
+class SceneGraphNode {
+  constructor() {
+    this.r = 1;
+    this.g = 1;
+    this.b = 1;
+    this.lineColor = null;
     this.parent = null
   }
-  draw(graphicsContext){
-
+  doDraw() {
+    throw "doDraw not implemented in SceneGraphNode";
+  }
+  draw() {
+    glPushMatrix();
+    this.doDraw();
+    glPopMatrix();
+  }
+  setColor(red, green, blue) {
+    this.r = red;
+    this.g = green;
+    this.b = blue;
+    return this;
   }
 }
 
-class CompoundObject extends SceneGraphNode{
-  constructor(...objects){
+class CompoundObject extends SceneGraphNode {
+  constructor(...objects) {
     super();
     this.children = [];
-    for(let obj of objects){
+    for (let obj of objects) {
       this.add(obj);
     }
   }
-  add(node){
+  add(node) {
     node.parent = this;
     this.children.push(node);
     return this;
   }
-  draw(graphicsContext){
-    for(let child of this.children){
-      child.draw(graphicsContext);
-    }
-  }
-  showParent(){
-    console.log(this.parent);
-  }
-  showChildren(){
-    for(let child of this.children){
-      console.log(child);
+  doDraw() {
+    for (let child of this.children) {
+      child.doDraw(); //why is this draw() in the API what if we need multiple CompoundObjects
     }
   }
 }
 
-class TransformedObject extends SceneGraphNode{
-  constructor(){
+class Polyhedron extends SceneGraphNode {
+  constructor(faces, vertices, normals) {
+    super();
+    this.faces = faces;
+    this.vertices = vertices;
+    this.normals = normals;
+    this.faceCoords = [];
+    this.normalCoords = [];
+    this.colors = [];
+    this.generateCoords();
+    this.generateColors();
+  }
+  generateCoords() {
+    for (let i = 0; i < this.faces.length; i++) {
+      let face = this.faces[i];
+      for (let j = 0; j < face.length - 1; j++) {
+        let start = this.faces[i][0];
+        let vertex = this.faces[i][j];
+        let last = this.faces[i][j + 1];
+
+        this.faceCoords.push(
+          this.vertices[start][0], this.vertices[start][1], this.vertices[start][2],
+          this.vertices[vertex][0], this.vertices[vertex][1], this.vertices[vertex][2],
+          this.vertices[last][0], this.vertices[last][1], this.vertices[last][2]
+        );
+
+        this.normalCoords.push(this.normals[i][0]);
+        this.normalCoords.push(this.normals[i][1]);
+        this.normalCoords.push(this.normals[i][2]);
+
+        this.normalCoords.push(this.normals[i][0]);
+        this.normalCoords.push(this.normals[i][1]);
+        this.normalCoords.push(this.normals[i][2]);
+
+        this.normalCoords.push(this.normals[i][0]);
+        this.normalCoords.push(this.normals[i][1]);
+        this.normalCoords.push(this.normals[i][2]);
+      }
+    }
+  }
+  generateColors() {
+    for (let i = 0; i < this.faces.length; i++) {
+      let face = this.faces[i];
+      let r = 0.5 + 0.5 * Math.random();
+      let g = 0.2 + 0.5 * Math.random();
+      let b = 0.2 + 0.5 * Math.random();
+      for (let vertex = 0; vertex < face.length - 1; vertex++) {
+        this.colors.push(r);
+        this.colors.push(g);
+        this.colors.push(b);
+
+        this.colors.push(r);
+        this.colors.push(g);
+        this.colors.push(b);
+
+        this.colors.push(r);
+        this.colors.push(g);
+        this.colors.push(b);
+      }
+    }
+  }
+  doDraw() {
+    this.normalCoords = new Float32Array(this.normalCoords);
+    this.faceCoords = new Float32Array(this.faceCoords);
+    this.colors = new Float32Array(this.colors);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glScalef(3, 3, 3);
+    glColor3f(this.r, this.g, this.b);
+    glVertexPointer(3, GL_FLOAT, 0, this.faceCoords);
+    glNormalPointer(GL_FLOAT, 0, this.normalCoords);
+    glPolygonOffset(1, 1);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glDrawArrays(GL_TRIANGLES, 0, this.faceCoords.length / 3);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+  }
+}
+
+class TransformedObject extends SceneGraphNode {
+  constructor(object) {
     super();
     this.object = object;
-    this.rotationInDegrees = angle;
+    this.rotationInDegrees = 0;
     this.scaleX = 1;
     this.scaleY = 1;
     this.scaleZ = 1;
+    this.rotateX = 0;
+    this.rotateY = 0;
+    this.rotateZ = 0;
     this.translateX = 0;
     this.translateY = 0;
     this.translateZ = 0;
   }
-  setRotation(angle){
+  setRotation(angle, xAxis = 0, yAxis = 0, zAxis = 0) {
+    this.rotationInDegrees = angle;
+    this.rotateX = xAxis;
+    this.rotateY = yAxis;
+    this.rotateZ = zAxis;
+    return this;
+  }
+  setScale(sx, sy = sx, sz = sx) {
     this.scaleX = sx;
     this.scaleY = sy;
+    this.scaleZ = sz;
     return this;
   }
-  setScale(sx, sy = sx, sz = sx){
+  setTranslation(dx, dy, dz) {
     this.translateX = dx;
-    this.translateY = sy;
-    this.translateZ = sz;
+    this.translateY = dy;
+    this.translateZ = dz;
     return this;
   }
-  setTranslation(dx,dy){
-
+  doDraw() {
+    glPushMatrix();
+    if (this.translateX != 0 || this.translateY != 0 || this.translateZ != 0) {
+      glTranslated(this.translateX, this.translateY, this.translateZ);
+    }
+    if (this.scaleX != 1 || this.scaleY != 1 || this.scaleZ != 1) {
+      glScaled(this.scaleX, this.scaleY, this.scaleZ);
+    }
+    if (this.rotationInDegrees != 0) {
+      glRotated(this.rotationInDegrees, this.rotateZ, this.rotateY, this.rotateX);
+    }
+    this.object.draw();
+    glPopMatrix();
   }
-  doDraw(g){
+}
 
+class CameraNode extends SceneGraphNode {
+  constructor() {
+    super();
+    this.camera = new Camera();
+  }
+  doDraw() {
+    this.camera.setScale(10);
+    this.camera.lookAt(0, 0, 20);
+    this.camera.apply();
   }
 }
