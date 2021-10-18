@@ -90,7 +90,7 @@ class IFSModel extends SceneGraphNode {
         this.obj = uvCone();
         break;
       case "Cylinder":
-        this.obj = uvCylinder;
+        this.obj = uvCylinder();
         break;
       default:
         throw ("Error: IFSModel does not contain a " + this.type + " model");
