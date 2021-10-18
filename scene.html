@@ -9,6 +9,7 @@
             <h1>OpenGL 1.1 API</h1>
         </div>
         <script src="glsim.js"></script>
+        <script src="basic-object-models-IFS.js"></script>
         <script src="polyhedra.js"></script>
         <script src="scene_graph_3d.js"></script>
         <script>
@@ -28,26 +29,10 @@
                  * This is where the scene graph API will be used to draw the scene
                  **/
                 let scene = new CompoundObject();
-                let pole = new CompoundObject();
-
-                let cube = new TransformedObject(
-                    new Polyhedron(cubeIFS.faces, cubeIFS.vertices, cubeIFS.faceNormals)
-                        .setColor(0.5, 0.3, 0)
-                )
-                    .setScale(0.2, 2, 0.2)
-                    .setTranslation(0, -4, 0);
-
-                let cube2 = new TransformedObject(
-                    new Polyhedron(cubeIFS.faces, cubeIFS.vertices, cubeIFS.faceNormals)
-                        .setColor(0.9, 1, 0.2))
-                    .setTranslation(0, 4, 0);
-
-                pole.add(cube);
-                pole.add(cube2);
-
-                let streetLight = new TransformedObject(pole).setScale(0.3);
-
-                scene.add(streetLight);
+                let ring = new IFSModel("Torus").setColor(0,1,0);
+                let wideRing = new TransformedObject(ring).setScale(1,2,1);
+                
+                scene.add(wideRing);
                 scene.draw(scene);
             }
 

@@ -35,19 +35,80 @@ class CompoundObject extends SceneGraphNode {
     this.children.push(node);
     return this;
   }
+
   /**
    * TODO: Add clone method
    */
+
   doDraw() {
     for (let child of this.children) {
-      child.doDraw(); //why is this draw() in the API what if we need multiple CompoundObjects
+      child.draw(); //why is this draw() in the API what if we need multiple CompoundObjects
     }
   }
 }
 
 /**
- * TODO: Add Camera object
+ * TODO: Finish Camera object
  */
+class CameraNode extends SceneGraphNode {
+  constructor() {
+    super();
+    this.camera = new Camera();
+    this.camera.setScale(10);
+    this.camera.lookAt(0, 0, 20);
+  }
+  doDraw() {
+    this.camera.apply();
+  }
+}
+
+/**
+ * IFSModel is a class extending SceneGraphNode that takes a string argument
+ * to determine what 3d object should be drawn using the data from the basic-object-models-IFS.js
+ * file. Supported types are: Cube, uvSphere, uvTorus, uvCone, and uvCylinder
+ * @type - String argument to determine the IFS model to be drawn
+ *         accepted arguments are: "Cube", "Sphere", "Torus", "Cone", and "Cylinder"
+ */
+class IFSModel extends SceneGraphNode {
+  constructor(type) {
+    super();
+    this.type = type;
+    this.obj;
+  }
+  doDraw() {
+    switch (this.type) {
+      case "Cube":
+        this.obj = cube();
+        break;
+      case "Sphere":
+        this.obj = uvSphere();
+        break;
+      case "Torus":
+        this.obj = uvTorus();
+        break;
+      case "Cone":
+        this.obj = uvCone();
+        break;
+      case "Cylinder":
+        this.obj = uvCylinder;
+        break;
+      default:
+        throw ("Error: IFSModel does not contain a " + this.type + " model");
+    }
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glScalef(3, 3, 3);
+    glColor3f(this.r, this.g, this.b);
+    glVertexPointer(3, GL_FLOAT, 0, this.obj.vertexPositions);
+    glNormalPointer(GL_FLOAT, 0, this.obj.vertexNormals);
+    glPolygonOffset(1, 1);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glDrawElements(GL_TRIANGLES, this.obj.indices.length, GL_UNSIGNED_SHORT, this.obj.indices);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+  }
+}
 
 /**
  * Polyhedron is a class to create a polyhedron gives faces, normals and vertices.
@@ -165,17 +226,5 @@ class TransformedObject extends SceneGraphNode {
     }
     this.object.draw();
     glPopMatrix();
-  }
-}
-
-class CameraNode extends SceneGraphNode {
-  constructor() {
-    super();
-    this.camera = new Camera();
-  }
-  doDraw() {
-    this.camera.setScale(10);
-    this.camera.lookAt(0, 0, 20);
-    this.camera.apply();
   }
 }
