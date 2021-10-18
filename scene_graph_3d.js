@@ -1,3 +1,6 @@
+/**
+ * SceneGraphNode is a class to represent an object in the scene graph
+ */
 class SceneGraphNode {
   constructor() {
     this.r = 1;
@@ -22,6 +25,12 @@ class SceneGraphNode {
   }
 }
 
+/**
+ * CompoundObject represents an object that is a collection of smaller objects
+ * used to build one new object. 
+ * 
+ * @objects - An unlimited number of objects which are being used to construct the CompoundObject
+ */
 class CompoundObject extends SceneGraphNode {
   constructor(...objects) {
     super();
@@ -179,6 +188,13 @@ class Polyhedron extends SceneGraphNode {
   }
 }
 
+/**
+ * TransformedObject represents a node in the scene graph that can apply a 
+ * tranformation to an object in the scene, supported transformations are 
+ * currently: rotation, scaling, and translation
+ * 
+ * @object - Object to apply the transformation to
+ */
 class TransformedObject extends SceneGraphNode {
   constructor(object) {
     super();
