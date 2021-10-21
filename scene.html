@@ -29,10 +29,13 @@
                  * This is where the scene graph API will be used to draw the scene
                  **/
                 let scene = new CompoundObject();
-                let ring = new IFSModel("Torus").setColor(0,1,0);
-                let wideRing = new TransformedObject(ring).setScale(1,2,1);
-                
-                scene.add(wideRing);
+          +      let xPillar = new TransformedObject(new IFSModel("Cube").setColor(0,1,0)).setScale(0.3,2,0.3);
+                let yPillar = new TransformedObject(new IFSModel("Cube").setColor(0,1,0)).setScale(2,0.3,0.3);
+                let j = new CompoundObject(xPillar, yPillar);
+                let y = new TransformedObject(j.clone()).setTranslation(0,3,0).setRotation(50,0,1,0);
+
+                scene.add(j);
+                scene.add(y);
                 scene.draw(scene);
             }
 
