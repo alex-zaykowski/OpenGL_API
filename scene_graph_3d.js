@@ -137,6 +137,16 @@ class Polyhedron extends SceneGraphNode {
     this.normalCoords = [];
     this.generateCoords();
   }
+  clone(){
+    let clone = super.clone();
+    clone.faces = this.faces;
+    clone.vertices = this.vertices;
+    clone.normals = this.normals;
+    clone.faceCoords = [];
+    clone.normalCoords = [];
+    clone.generateCoords();
+    return clone;
+  }
   //method to generate the face and normal coordinates using a 2D array of vertices, faces, and normals
   generateCoords() {
     for (let i = 0; i < this.faces.length; i++) {

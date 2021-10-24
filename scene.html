@@ -29,13 +29,22 @@
                  * This is where the scene graph API will be used to draw the scene
                  **/
                 let scene = new CompoundObject();
-          +      let xPillar = new TransformedObject(new IFSModel("Cube").setColor(0,1,0)).setScale(0.3,2,0.3);
-                let yPillar = new TransformedObject(new IFSModel("Cube").setColor(0,1,0)).setScale(2,0.3,0.3);
-                let j = new CompoundObject(xPillar, yPillar);
-                let y = new TransformedObject(j.clone()).setTranslation(0,3,0).setRotation(50,0,1,0);
+                let ComplexPolyhedra = new CompoundObject();
+                ComplexPolyhedra.add(
+                    new TransformedObject(
+                        new Polyhedron(octahedronIFS.faces, octahedronIFS.vertices, octahedronIFS.faceNormals).setColor(0,0,1)
+                    ).setTranslation(0,-1,0).setScale(0.4)
+                );
+                ComplexPolyhedra.add(
+                    new TransformedObject(
+                        new Polyhedron(octahedronIFS.faces, octahedronIFS.vertices, octahedronIFS.faceNormals).setColor(0,0,1)
+                    ).setTranslation(0,1,0).setScale(0.4)
+                );
 
-                scene.add(j);
-                scene.add(y);
+                ComplexPolyhedra2 = new TransformedObject(ComplexPolyhedra.clone()).setTranslation(2,0,0);
+
+                scene.add(ComplexPolyhedra);
+                scene.add(ComplexPolyhedra2);
                 scene.draw(scene);
             }
 
