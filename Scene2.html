@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="main.css">
+
+<body>
+    <div id="content">
+        <div id="header">
+            <h1>OpenGL 1.1 API</h1>
+        </div>
+        <script src="glsim.js"></script>
+        <script src="basic-object-models-IFS.js"></script>
+        <script src="polyhedra.js"></script>
+        <script src="scene_graph_3d.js"></script>
+        <script>
+            let canvas; // variable to contain the canvas
+            let a; //cameraNode
+
+            // Displays the current scene, all drawing is done here...
+            function display() {
+                // ------------- set up camera and canvas -------------------------------------------
+                canvas = document.getElementById("glcanvas"); // get the canvas context from the HTML
+
+                glClearColor(0, 0, 0, 1); // background color is black
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                a.apply(); //set up projection
+                 //this does not work but apply does
+                 // glMatrixMode(GL_PROJECTION);
+                 // glLoadIdentity();
+                 // gluPerspective(90, 1,.1, 500);
+                 // glMatrixMode(GL_MODELVIEW);
+
+                // -----------------------------------------------------------------------------------
+                /**
+                 * This is where the scene graph API will be used to draw the scene
+                 **/
+                let scene = new CompoundObject();
+                //this should be the parent to camera
+                let test = new TransformedObject(a).setTranslation(2,10,0);
+
+                let ring = new IFSModel("Torus").setColor(0,1,0);
+                let wideRing = new TransformedObject(ring).setScale(1,2,1);
+
+
+                scene.add(a); //0 of the transformations work if a is not added first
+                //scene.add(test); //doesn't matter if you add test to scene or nah still breaks
+                scene.add(wideRing);
+                scene.draw(scene);
+            }
+
+            // ------------------------- initialization functions -----------------------------------
+
+            /**
+             *  initGL() is called just once, by main(), to do initialization of OpenGL state
+             *  and other global state.
+             */
+
+            function initGL() {
+                glClearColor(0.0, 0.0, 0.0, 1.0); // background color
+                glEnable(GL_DEPTH_TEST);      // Required for 3D drawing, not usually for 2D.
+                glEnable(GL_LIGHTING);        // Enable lighting.
+                glEnable(GL_LIGHT0);          // Turn on a light.  By default, shines from direction of viewer.
+                glEnable(GL_NORMALIZE);       // OpenGL will make all normal vectors into unit normals
+                glEnable(GL_COLOR_MATERIAL);  // Material ambient and diffuse poly.colors can be set by glColor*
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);  // Make OpenGL draw back sides of triangles.
+                glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.1, 0.1, 0.1, 1]); // Add some ambient light.
+            }
+
+            function init() {  // Called  when the page has loaded.
+                try {
+                    glsimUse("glcanvas"); // OpenGL will draw to the canvas with id="glcanvas".
+                }
+                catch (e) {
+                    document.getElementById("canvas-holder").innerHTML =
+                        "Sorry, an error occured:<br>" + e;
+                    return;
+                }
+                initGL();
+                a = new CameraNode(new Camera());
+                display();  // Call display() when the page is first loaded.
+            }
+
+            window.onload = init;
+        </script>
+
+        <div id="canvas-holder">
+            <!-- You can set the size of the drawing area in the next line -->
+            <canvas id="glcanvas" width="600" height="600"></canvas>
+        </div>
+
+        <div id="menu">
+            <h1>Examples</h1>
+            <ul>
+                <li><a href="#">Scene 1</a></li>
+                <li><a href="#">Scene 2</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

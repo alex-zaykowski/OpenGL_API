@@ -1,16 +1,22 @@
 /**
  * SceneGraphNode is a class to represent an object in the scene graph
  */
-class SceneGraphNode {
+ class SceneGraphNode {
   constructor() {
     this.r = 1;
     this.g = 1;
     this.b = 1;
     this.lineColor = null;
-    this.parent = null
+    this.parent = null;
   }
   doDraw() {
     throw "doDraw not implemented in SceneGraphNode";
+  }
+  clone(){
+    let clone = Object.create(Object.getPrototypeOf(this));
+    clone.parent = null;
+    clone.setColor(this.r, this.g, this.b);
+    return clone;
   }
   draw() {
     glPushMatrix();
@@ -27,8 +33,8 @@ class SceneGraphNode {
 
 /**
  * CompoundObject represents an object that is a collection of smaller objects
- * used to build one new object. 
- * 
+ * used to build one new object.
+ *
  * @objects - An unlimited number of objects which are being used to construct the CompoundObject
  */
 class CompoundObject extends SceneGraphNode {
@@ -44,30 +50,18 @@ class CompoundObject extends SceneGraphNode {
     this.children.push(node);
     return this;
   }
-
-  /**
-   * TODO: Add clone method
-   */
-
+  clone(){
+    let clone = super.clone();
+    clone.children = [];
+    for(let i = 0; i < this.children.length; i++){
+      clone.add(this.children[i].clone())
+    }
+    return clone;
+  }
   doDraw() {
     for (let child of this.children) {
       child.draw(); //why is this draw() in the API what if we need multiple CompoundObjects
     }
-  }
-}
-
-/**
- * TODO: Finish Camera object
- */
-class CameraNode extends SceneGraphNode {
-  constructor() {
-    super();
-    this.camera = new Camera();
-    this.camera.setScale(10);
-    this.camera.lookAt(0, 0, 20);
-  }
-  doDraw() {
-    this.camera.apply();
   }
 }
 
@@ -83,6 +77,11 @@ class IFSModel extends SceneGraphNode {
     super();
     this.type = type;
     this.obj;
+  }
+  clone(){
+    let clone = super.clone();
+    clone.type = this.type;
+    return clone;
   }
   doDraw() {
     switch (this.type) {
@@ -123,7 +122,7 @@ class IFSModel extends SceneGraphNode {
  * Polyhedron is a class to create a polyhedron gives faces, normals and vertices.
  * It mainly is designed to work with polyhedra.js and can draw any polyhedron geometry
  * given the parameters follow the same structure used in polyhedra.js
- * 
+ *
  * @faces - 2D array of vertex indices for each face
  * @vetices - 2D array of vertices
  * @normals - 2D array of normal values
@@ -189,16 +188,17 @@ class Polyhedron extends SceneGraphNode {
 }
 
 /**
- * TransformedObject represents a node in the scene graph that can apply a 
- * tranformation to an object in the scene, supported transformations are 
+ * TransformedObject represents a node in the scene graph that can apply a
+ * tranformation to an object in the scene, supported transformations are
  * currently: rotation, scaling, and translation
- * 
+ *
  * @object - Object to apply the transformation to
  */
 class TransformedObject extends SceneGraphNode {
   constructor(object) {
     super();
     this.object = object;
+    this.object.parent = this;
     this.rotationInDegrees = 0;
     this.scaleX = 1;
     this.scaleY = 1;
@@ -209,6 +209,19 @@ class TransformedObject extends SceneGraphNode {
     this.translateX = 0;
     this.translateY = 0;
     this.translateZ = 0;
+  }
+  clone(){
+    let clone = super.clone();
+    clone.object = this.object.clone();
+    clone.object.parent = this;
+    clone.rotationInDegrees = this.rotationInDegrees;
+    clone.scaleX = this.scaleX;
+    clone.scaleY = this.scaleY;
+    clone.scaleZ = this.scaleZ;
+    clone.translateX = this.translateX;
+    clone.translateY = this.translateY;
+    clone.translateZ = this.translateZ;
+    return clone;
   }
   setRotation(angle, xAxis = 0, yAxis = 0, zAxis = 0) {
     this.rotationInDegrees = angle;
@@ -242,5 +255,39 @@ class TransformedObject extends SceneGraphNode {
     }
     this.object.draw();
     glPopMatrix();
+  }
+}
+
+/**
+ * has the same problem whether this extends SceneGraphNode or TransformedObject
+ */
+class CameraNode extends SceneGraphNode{
+  constructor(object) {
+    super();
+    this.object = object;
+    this.camera = this.object;
+    this.camera.setScale(10);
+    this.camera.lookAt(0, 0, -20);
+    this.camera.installTrackball(display);
+  }
+  doDraw() {
+      let obj = this.parent; //get parent
+      while(obj != null){  //used to be obj.parent != null but this also did not work
+        console.log(obj); //for some reason this is CompoundObject and not TransformedObject
+        //should do the inverse of parent translates
+        glTranslated(-obj.translateX, -obj.translateY, -obj.translateZ);
+        obj =obj.parent; //go up scene graph
+      }
+     //glTranslated(5,0,0);  //this works without the above, its a problem with parents
+     //not with camera translate
+  }
+  draw(){
+    //have to pop matrix so that it applies to the entire scene
+    glPopMatrix();
+    this.doDraw();
+    glPushMatrix();
+  }
+  apply(){
+    this.camera.apply();
   }
 }
