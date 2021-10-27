@@ -8,6 +8,7 @@
     this.b = 1;
     this.lineColor = null;
     this.parent = null;
+    this.generatedTextures = [];
   }
   doDraw() {
     throw "doDraw not implemented in SceneGraphNode";
@@ -29,6 +30,17 @@
     this.b = blue;
     return this;
   }
+  setBackground(r, g, b, a){
+    glClearColor(r, g, b, a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    return this;
+  }
+  setAmbient(rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient){
+     let globalAmbient = [rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient];
+     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, globalAmbient );
+     return this;
+   }
+
 }
 
 /**
@@ -46,7 +58,7 @@ class CompoundObject extends SceneGraphNode {
     }
   }
   add(node) {
-    node.parent = this;
+  //  node.parent = this;
     this.children.push(node);
     return this;
   }
@@ -208,7 +220,7 @@ class TransformedObject extends SceneGraphNode {
   constructor(object) {
     super();
     this.object = object;
-    this.object.parent = this;
+    object.parent = this;
     this.rotationInDegrees = 0;
     this.scaleX = 1;
     this.scaleY = 1;
@@ -231,6 +243,9 @@ class TransformedObject extends SceneGraphNode {
     clone.translateX = this.translateX;
     clone.translateY = this.translateY;
     clone.translateZ = this.translateZ;
+    clone.rotateX = this.rotateX;
+    clone.rotateY = this.rotateY;
+    clone.rotateZ = this.rotateZ;
     return clone;
   }
   setRotation(angle, xAxis = 0, yAxis = 0, zAxis = 0) {
@@ -269,7 +284,9 @@ class TransformedObject extends SceneGraphNode {
 }
 
 /**
- * has the same problem whether this extends SceneGraphNode or TransformedObject
+ * CameraNode represents a camera as a node in the SceneGraph. All transformations
+ *applied to parent node apply to camera.
+ *@object Camera object to add to scene.
  */
 class CameraNode extends SceneGraphNode{
   constructor(object) {
@@ -277,19 +294,18 @@ class CameraNode extends SceneGraphNode{
     this.object = object;
     this.camera = this.object;
     this.camera.setScale(10);
-    this.camera.lookAt(0, 0, -20);
+    this.camera.lookAt(0, 0, 20);
     this.camera.installTrackball(display);
   }
   doDraw() {
       let obj = this.parent; //get parent
-      while(obj != null){  //used to be obj.parent != null but this also did not work
-        console.log(obj); //for some reason this is CompoundObject and not TransformedObject
-        //should do the inverse of parent translates
-        glTranslated(-obj.translateX, -obj.translateY, -obj.translateZ);
-        obj =obj.parent; //go up scene graph
+      while(obj != null){
+        if(obj instanceof TransformedObject){
+          glTranslated(-obj.translateX, -obj.translateY, -obj.translateZ);
+          glRotatef(-obj.rotationInDegrees, obj.rotateX, obj.rotateY, obj.rotateZ);
+        }
+        obj =obj.parent; //go up compoundObject
       }
-     //glTranslated(5,0,0);  //this works without the above, its a problem with parents
-     //not with camera translate
   }
   draw(){
     //have to pop matrix so that it applies to the entire scene
@@ -301,3 +317,42 @@ class CameraNode extends SceneGraphNode{
     this.camera.apply();
   }
 }
+
+/**
+*
+*LightNode represents a node in the scene graph that is a light. Supports all
+*GL_LIGHTs.
+*
+*@light light object GL_LIGHT1 - GL_LIGHT7, GL_LIGHT0 is considered default
+* and is already set in scene
+**/
+class LightNode extends SceneGraphNode{
+  constructor(light){
+    super();
+    this.light = light;
+    glEnable(light);
+  }
+  setLightAmbient(rAmbient, gAmbient, bAmbient, aAmbient){
+    let ambient = [rAmbient, gAmbient,bAmbient, aAmbient];
+    glLightfv(this.light, GL_AMBIENT, ambient);
+    return this;
+  }
+  setLightDiffuse(rDiffuse, gDiffuse, bDiffuse, aDiffuse){
+    let diffuse = [rDiffuse, gDiffuse, bDiffuse, aDiffuse];
+    glLightfv(this.light, GL_DIFFUSE, diffuse);
+    return this;
+  }
+  setLightSpecular( rSpecular, gSpecular, bSpecular, aSpecular){
+    let specular = [rSpecular, gSpecular, bSpecular, aSpecular];
+    glLightfv(this.light, GL_SPECULAR, specular);
+    return this;
+  }
+  setLightPosition(posX, posY, posZ, w){
+    let position = [posX, posY, posZ, w];
+    this.posX = posX;
+    this.posY = posY;
+    this.posZ = posZ;
+    glLightfv(this.light, GL_POSITION, position);
+    return this;
+  }
+  }

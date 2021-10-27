@@ -21,31 +21,62 @@
                 // ------------- set up camera and canvas -------------------------------------------
                 canvas = document.getElementById("glcanvas"); // get the canvas context from the HTML
 
-                glClearColor(0, 0, 0, 1); // background color is black
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                a.apply(); //set up projection
-                 //this does not work but apply does
-                 // glMatrixMode(GL_PROJECTION);
-                 // glLoadIdentity();
-                 // gluPerspective(90, 1,.1, 500);
-                 // glMatrixMode(GL_MODELVIEW);
-
-                // -----------------------------------------------------------------------------------
-                /**
-                 * This is where the scene graph API will be used to draw the scene
-                 **/
+                //create scene
                 let scene = new CompoundObject();
-                //this should be the parent to camera
-                let test = new TransformedObject(a).setTranslation(2,10,0);
+                //add additional yellow light
+                let light2 = new LightNode(GL_LIGHT2).setLightDiffuse(.9,.8,.1,.1).setLightPosition(1,10,1,0);
+                light2.setBackground(0,.5,.5,0).setAmbient(0,.1,.1,.1);
 
-                let ring = new IFSModel("Torus").setColor(0,1,0);
-                let wideRing = new TransformedObject(ring).setScale(1,2,1);
+                //set up projection
+                a.apply();
 
+                //draws the scene
 
-                scene.add(a); //0 of the transformations work if a is not added first
-                //scene.add(test); //doesn't matter if you add test to scene or nah still breaks
-                scene.add(wideRing);
+                //create base
+                let baseTemp = new IFSModel("Cylinder").setColor(0,.4,.13);
+                let base = new TransformedObject(baseTemp).setRotation(90, 0, 0,1).setScale(9,.2,9).setTranslation(0,-5,0);
+
+                //add trees
+                let trunk = new TransformedObject(new IFSModel("Cylinder").setColor(.4,.13,0)).setRotation(90,0,0,1).setScale(.5,1,.5).setTranslation(0,-3.5,0);
+                let treeTop = new TransformedObject(new IFSModel("Cone").setColor(.3, .6, 0)).setRotation(-90,0,0,1).setScale(2);
+                let treeParts = new CompoundObject().add(trunk).add(treeTop);
+                let tree = new TransformedObject(treeParts).setTranslation(2,0,0);
+                let tree2 = tree.clone().setTranslation(-5,0,8);
+                let tree3 = tree.clone().setTranslation(8,0,-3);
+                let tree4 = tree.clone().setTranslation(2,0,-7);
+                let tree5 = tree.clone().setTranslation(-8,0,0);
+                let tree6 = tree.clone().setTranslation(7,0,8);
+
+                //add bushes
+                let bushTemp = new Polyhedron(truncatedIcosahedronIFS.faces, truncatedIcosahedronIFS.vertices, truncatedIcosahedronIFS.faceNormals).setColor(0,.3,.15);
+                let bush = new TransformedObject(bushTemp).setScale(.3).setTranslation(0,-4.3,0);
+                let bush2 = bush.clone().setTranslation(-4,-4.3,0);
+                let bush3 = bush.clone().setTranslation(-3,-4.3,-3);
+                let bush4 = bush.clone().setTranslation(-2,-4.3,-1);
+                let bush5 = bush.clone().setTranslation(-2,-4.3,-5);
+                let bush6 = bush.clone().setTranslation(-3,-4.3,-3);
+                let bush7 = bush.clone().setTranslation(-6,-4.3,-5);
+                let bush8 = bush.clone().setTranslation(-1,-4.3,-7);
+                let bush9 = bush.clone().setTranslation(-8,-4.3,-7);
+                let bush10 = bush.clone().setTranslation(-4,-4.3,-8);
+                let bushes = new CompoundObject().add(bush).add(bush2).add(bush3).add(bush4).add(bush5).add(bush6).add(bush7).add(bush8).add(bush9).add(bush10);
+                let houseTemp = new Polyhedron(houseIFS.faces, houseIFS.vertices, houseIFS.faceNormals).setColor(1,.2,.2);
+                let house = new TransformedObject(houseTemp).setScale(.5,.5,.4).setTranslation(1,-3.5, 8);
+
+                //add clouds
+                let cloudTemp = new Polyhedron(truncatedRhombicDodecahedronIFS.faces, truncatedRhombicDodecahedronIFS.vertices, truncatedRhombicDodecahedronIFS.faceNormals);
+                let cloud = new TransformedObject(cloudTemp).setScale(.4).setTranslation(-3,4,2);
+                let cloud2 = cloud.clone().setTranslation(4,5,-3);
+                let cloud3 = cloud.clone().setTranslation(5.3,4.3,-3);
+                let clouds = new CompoundObject().add(cloud).add(cloud2).add(cloud3);
+                let forest = new CompoundObject().add(tree).add(tree2).add(tree3).add(tree4).add(tree5).add(tree6).add(base).add(bushes).add(house);
+                let forestScale = new TransformedObject(forest).setScale(.7).setTranslation(0,-4,0).setRotation(90,0,1,0);
+                let cameraParent = new TransformedObject(a).setTranslation(0,0,6);
+
+                //add everything to scene
+                scene.add(a);
+                scene.add(forestScale);
+                scene.add(clouds);
                 scene.draw(scene);
             }
 
@@ -57,14 +88,12 @@
              */
 
             function initGL() {
-                glClearColor(0.0, 0.0, 0.0, 1.0); // background color
                 glEnable(GL_DEPTH_TEST);      // Required for 3D drawing, not usually for 2D.
                 glEnable(GL_LIGHTING);        // Enable lighting.
                 glEnable(GL_LIGHT0);          // Turn on a light.  By default, shines from direction of viewer.
                 glEnable(GL_NORMALIZE);       // OpenGL will make all normal vectors into unit normals
                 glEnable(GL_COLOR_MATERIAL);  // Material ambient and diffuse poly.colors can be set by glColor*
                 glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);  // Make OpenGL draw back sides of triangles.
-                glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.1, 0.1, 0.1, 1]); // Add some ambient light.
             }
 
             function init() {  // Called  when the page has loaded.
