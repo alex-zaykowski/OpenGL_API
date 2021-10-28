@@ -14,38 +14,132 @@
         <script src="scene_graph_3d.js"></script>
         <script>
             let canvas; // variable to contain the canvas
+            let a; //cameraNode
+            let snowman;
+            let z = -1;
 
             // Displays the current scene, all drawing is done here...
             function display() {
                 // ------------- set up camera and canvas -------------------------------------------
                 canvas = document.getElementById("glcanvas"); // get the canvas context from the HTML
 
-                glClearColor(0, 0, 0, 1); // background color is black
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                camera.apply();
-                // -----------------------------------------------------------------------------------
-
-                /**
-                 * This is where the scene graph API will be used to draw the scene
-                 **/
+                //create scene
                 let scene = new CompoundObject();
-                let ComplexPolyhedra = new CompoundObject();
-                ComplexPolyhedra.add(
-                    new TransformedObject(
-                        new Polyhedron(octahedronIFS.faces, octahedronIFS.vertices, octahedronIFS.faceNormals).setColor(0,0,1)
-                    ).setTranslation(0,-1,0).setScale(0.4)
-                );
-                ComplexPolyhedra.add(
-                    new TransformedObject(
-                        new Polyhedron(octahedronIFS.faces, octahedronIFS.vertices, octahedronIFS.faceNormals).setColor(0,0,1)
-                    ).setTranslation(0,1,0).setScale(0.4)
-                );
+                //add additional yellow light
+                let light = new LightNode(GL_LIGHT2).setLightDiffuse(0.5, 0.5, 0.5, .4).setLightPosition(1, 10, 1, 0);
+                light.setBackground(0.1, 0.1, 0.3, 0).setAmbient(.3, .3, .6, .1);
 
-                ComplexPolyhedra2 = new TransformedObject(ComplexPolyhedra.clone()).setTranslation(2,0,0);
-                scene.add(ComplexPolyhedra);
-                scene.add(ComplexPolyhedra2);
+                //set up projection
+                a.apply();
+
+                //draws the scene
+                //draw clouds
+                let cloud = new TransformedObject(new Polyhedron(dodecahedronIFS.faces, dodecahedronIFS.vertices, dodecahedronIFS.faceNormals).setColor(1, 1, 1))
+                    .setScale(1.5, 0.5, 0.8);
+                let cloud1 = new TransformedObject(cloud.clone()).setRotation(30, 1, 1, 0).setTranslation(-5, 9, 0);
+                let cloud2 = new TransformedObject(cloud.clone()).setRotation(-170, 1, 1, 0).setTranslation(5, 8, 0);
+
+                //draw stars
+
+                //draw tree
+                let trunk = new TransformedObject(new IFSModel("Cylinder").setColor(.4, .13, 0)).setRotation(90, 0, 0, 1).setScale(.5, 1, .5).setTranslation(0, -3.5, 0);
+                let treeTop = new TransformedObject(new IFSModel("Cone").setColor(.3, .6, 0)).setRotation(-90, 0, 0, 1).setScale(2);
+                let treeParts = new CompoundObject().add(trunk).add(treeTop);
+                let tree = new TransformedObject(treeParts).setScale(0.7).setTranslation(0, 3.5, 0);
+                let tree1 = new TransformedObject(tree.clone()).setTranslation(3, 0, 0);
+                let tree2 = new TransformedObject(tree.clone()).setTranslation(-6, 0, -2);
+                let tree3 = new TransformedObject(tree.clone()).setTranslation(4, 0, 4);
+
+                //draw snowman head
+                let headContainer = new CompoundObject();
+                let headBall = new TransformedObject(new IFSModel("Sphere").setColor(1, 1, 1));
+                let nose = new TransformedObject(new IFSModel("Cone").setColor(1, 1, 0)).setScale(0.2, 0.2, 0.6).setTranslation(0, 0, 1.6);
+                let eye1 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.1).setTranslation(0.5, 0.5, 1.4);
+                let eye2 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.1).setTranslation(-0.5, 0.5, 1.4);
+
+                let mouthStone1 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.06).setTranslation(-0.5, -0.3, 1.5);
+                let mouthStone2 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.06).setTranslation(-0.25, -0.4, 1.5);
+                let mouthStone3 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.06).setTranslation(0, -0.45, 1.5);
+                let mouthStone4 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.06).setTranslation(0.25, -0.4, 1.5);
+                let mouthStone5 = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.06).setTranslation(0.5, -0.3, 1.5);
+                headContainer.add(headBall).add(nose).add(eye1).add(eye2).add(mouthStone1).add(mouthStone2).add(mouthStone3).add(mouthStone4).add(mouthStone5);
+
+                //draw snowman body
+                let bodyBall = new CompoundObject();
+                let ball = new TransformedObject(new IFSModel("Sphere").setColor(1, 1, 1)).setScale(1.5);
+                let button = new TransformedObject(new IFSModel("Sphere").setColor(0, 0, 0)).setScale(0.3).setTranslation(0, 0, 2);
+                bodyBall.add(ball).add(button)
+
+                //draw snowman
+                let snowmanContainer = new CompoundObject();
+                let head = new TransformedObject(headContainer).setTranslation(0, 3.4, 0);
+                let bottom = new TransformedObject(bodyBall.clone()).setScale(1.2).setTranslation(0, -4, 0);
+                snowmanContainer.add(head).add(bodyBall).add(bottom);
+
+                //draw ground
+                let groundContainer = new CompoundObject();
+                let baseTemp = new IFSModel("Cylinder").setColor(1, 1, 1);
+                let snowMound = new TransformedObject(new IFSModel("Sphere").setColor(1, 1, 1)).setScale(3, 0.4, 2.4).setRotation(20, 1, 0, 0).setTranslation(-1, 0.1, -1.5);
+                let base = new TransformedObject(baseTemp).setScale(6, 0.1, 6).setRotation(90, 0, 0, 1);
+                groundContainer.add(base).add(snowMound).add(tree1).add(tree2).add(tree3);
+                let ground = new TransformedObject(groundContainer).setTranslation(0, -3.5, 0);
+
+                //add snowman
+                snowman = new TransformedObject(snowmanContainer).setScale(0.3).setTranslation(0, -1.5, z);
+
+                //scene.add(ground);
+
+                //add everything to scene
+                scene.add(cloud1);
+                scene.add(cloud2);
+                scene.add(snowman)
+                scene.add(ground);
+                scene.add(a);
+                //scene.add(ground);
                 scene.draw(scene);
             }
+
+            // --- animation --- 
+            let frameNumber;
+            function updateFrame() {
+                z = 9*((frameNumber+30) % 280)/100;
+                let step = frameNumber;
+                console.log(frameNumber);
+                if (step > 50) {
+                    step = 100 - step;
+                }
+            }
+            function draw() {
+                glPushMatrix();
+                display();
+                glPopMatrix();
+            }
+            let animating = true;
+
+            let prevTime = null;  // time since previous call to frame()
+            // Note: To avoid having the animation play too fast on computers
+            // where requestAnimationFrame is called more than 60 times per
+            // second, the frame number has been converted into an elapsed
+            // time measured in thirtieths of a second.
+
+            function frame(time) {
+                if (!animating) {
+                    return;  // stops the animation
+                }
+                if (prevTime == null) { // Just save the start time.
+                    prevTime = time;
+                }
+                else {
+                    let elapsedTimeInSecs = (time - prevTime) / 1000;
+                    prevTime = time;
+                    let delta = elapsedTimeInSecs * 30;  // time change in units of 1/30 second.
+                    frameNumber += delta;
+                    updateFrame();
+                    draw();
+                }
+                requestAnimationFrame(frame);
+            }
+
 
             // ------------------------- initialization functions -----------------------------------
 
@@ -55,14 +149,12 @@
              */
 
             function initGL() {
-                glClearColor(0.0, 0.0, 0.0, 1.0); // background color
                 glEnable(GL_DEPTH_TEST);      // Required for 3D drawing, not usually for 2D.
                 glEnable(GL_LIGHTING);        // Enable lighting.
-                glEnable(GL_LIGHT0);          // Turn on a light.  By default, shines from direction of viewer.
+                //glEnable(GL_LIGHT0);          // Turn on a light.  By default, shines from direction of viewer.
                 glEnable(GL_NORMALIZE);       // OpenGL will make all normal vectors into unit normals
                 glEnable(GL_COLOR_MATERIAL);  // Material ambient and diffuse poly.colors can be set by glColor*
                 glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);  // Make OpenGL draw back sides of triangles.
-                glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.1, 0.1, 0.1, 1]); // Add some ambient light.
             }
 
             function init() {  // Called  when the page has loaded.
@@ -75,11 +167,15 @@
                     return;
                 }
                 initGL();
-                camera = new Camera();
-                camera.setScale(10);
-                camera.lookAt(0, 0, 20);
-                camera.installTrackball(display);
-                display();  // Call display() when the page is first loaded.
+                a = new CameraNode(new Camera());
+                if (animating) {
+                    prevTime = null;
+                    requestAnimationFrame(frame);
+                }
+                display();
+                frameNumber = 0;
+                updateFrame();
+                draw();  // Call display() when the page is first loaded.
             }
 
             window.onload = init;
@@ -93,8 +189,8 @@
         <div id="menu">
             <h1>Examples</h1>
             <ul>
-                <li><a href="#">Scene 1</a></li>
-                <li><a href="#">Scene 2</a></li>
+                <li><a href="scene.html">Alex's Scene</a></li>
+                <li><a href="scene2.html">Reagan's Scene</a></li>
             </ul>
         </div>
     </div>

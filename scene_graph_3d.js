@@ -1,7 +1,7 @@
 /**
  * SceneGraphNode is a class to represent an object in the scene graph
  */
- class SceneGraphNode {
+class SceneGraphNode {
   constructor() {
     this.r = 1;
     this.g = 1;
@@ -13,7 +13,7 @@
   doDraw() {
     throw "doDraw not implemented in SceneGraphNode";
   }
-  clone(){
+  clone() {
     let clone = Object.create(Object.getPrototypeOf(this));
     clone.parent = null;
     clone.setColor(this.r, this.g, this.b);
@@ -30,16 +30,16 @@
     this.b = blue;
     return this;
   }
-  setBackground(r, g, b, a){
+  setBackground(r, g, b, a) {
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     return this;
   }
-  setAmbient(rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient){
-     let globalAmbient = [rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient];
-     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, globalAmbient );
-     return this;
-   }
+  setAmbient(rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient) {
+    let globalAmbient = [rGlobalAmbient, gGlobalAmbient, bGlobalAmbient, aGlobalAmbient];
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+    return this;
+  }
 
 }
 
@@ -58,21 +58,21 @@ class CompoundObject extends SceneGraphNode {
     }
   }
   add(node) {
-  //  node.parent = this;
+    //  node.parent = this;
     this.children.push(node);
     return this;
   }
-  clone(){
+  clone() {
     let clone = super.clone();
     clone.children = [];
-    for(let i = 0; i < this.children.length; i++){
+    for (let i = 0; i < this.children.length; i++) {
       clone.add(this.children[i].clone())
     }
     return clone;
   }
   doDraw() {
     for (let child of this.children) {
-      child.draw(); //why is this draw() in the API what if we need multiple CompoundObjects
+      child.draw(); 
     }
   }
 }
@@ -90,7 +90,7 @@ class IFSModel extends SceneGraphNode {
     this.type = type;
     this.obj;
   }
-  clone(){
+  clone() {
     let clone = super.clone();
     clone.type = this.type;
     return clone;
@@ -149,7 +149,7 @@ class Polyhedron extends SceneGraphNode {
     this.normalCoords = [];
     this.generateCoords();
   }
-  clone(){
+  clone() {
     let clone = super.clone();
     clone.faces = this.faces;
     clone.vertices = this.vertices;
@@ -232,7 +232,7 @@ class TransformedObject extends SceneGraphNode {
     this.translateY = 0;
     this.translateZ = 0;
   }
-  clone(){
+  clone() {
     let clone = super.clone();
     clone.object = this.object.clone();
     clone.object.parent = this;
@@ -268,7 +268,6 @@ class TransformedObject extends SceneGraphNode {
     return this;
   }
   doDraw() {
-    glPushMatrix();
     if (this.translateX != 0 || this.translateY != 0 || this.translateZ != 0) {
       glTranslated(this.translateX, this.translateY, this.translateZ);
     }
@@ -279,7 +278,6 @@ class TransformedObject extends SceneGraphNode {
       glRotated(this.rotationInDegrees, this.rotateZ, this.rotateY, this.rotateX);
     }
     this.object.draw();
-    glPopMatrix();
   }
 }
 
@@ -288,7 +286,7 @@ class TransformedObject extends SceneGraphNode {
  *applied to parent node apply to camera.
  *@object Camera object to add to scene.
  */
-class CameraNode extends SceneGraphNode{
+class CameraNode extends SceneGraphNode {
   constructor(object) {
     super();
     this.object = object;
@@ -298,22 +296,22 @@ class CameraNode extends SceneGraphNode{
     this.camera.installTrackball(display);
   }
   doDraw() {
-      let obj = this.parent; //get parent
-      while(obj != null){
-        if(obj instanceof TransformedObject){
-          glTranslated(-obj.translateX, -obj.translateY, -obj.translateZ);
-          glRotatef(-obj.rotationInDegrees, obj.rotateX, obj.rotateY, obj.rotateZ);
-        }
-        obj =obj.parent; //go up compoundObject
+    let obj = this.parent; //get parent
+    while (obj != null) {
+      if (obj instanceof TransformedObject) {
+        glTranslated(-obj.translateX, -obj.translateY, -obj.translateZ);
+        glRotated( -obj.rotationInDegrees, obj.rotateX, obj.rotateY, obj.rotateZ);
       }
+      obj = obj.parent; //go up compoundObject
+    }
   }
-  draw(){
+  draw() {
     //have to pop matrix so that it applies to the entire scene
     glPopMatrix();
     this.doDraw();
     glPushMatrix();
   }
-  apply(){
+  apply() {
     this.camera.apply();
   }
 }
@@ -326,33 +324,33 @@ class CameraNode extends SceneGraphNode{
 *@light light object GL_LIGHT1 - GL_LIGHT7, GL_LIGHT0 is considered default
 * and is already set in scene
 **/
-class LightNode extends SceneGraphNode{
-  constructor(light){
+class LightNode extends SceneGraphNode {
+  constructor(light) {
     super();
     this.light = light;
     glEnable(light);
   }
-  setLightAmbient(rAmbient, gAmbient, bAmbient, aAmbient){
-    let ambient = [rAmbient, gAmbient,bAmbient, aAmbient];
+  setLightAmbient(rAmbient, gAmbient, bAmbient, aAmbient) {
+    let ambient = [rAmbient, gAmbient, bAmbient, aAmbient];
     glLightfv(this.light, GL_AMBIENT, ambient);
     return this;
   }
-  setLightDiffuse(rDiffuse, gDiffuse, bDiffuse, aDiffuse){
+  setLightDiffuse(rDiffuse, gDiffuse, bDiffuse, aDiffuse) {
     let diffuse = [rDiffuse, gDiffuse, bDiffuse, aDiffuse];
     glLightfv(this.light, GL_DIFFUSE, diffuse);
     return this;
   }
-  setLightSpecular( rSpecular, gSpecular, bSpecular, aSpecular){
+  setLightSpecular(rSpecular, gSpecular, bSpecular, aSpecular) {
     let specular = [rSpecular, gSpecular, bSpecular, aSpecular];
     glLightfv(this.light, GL_SPECULAR, specular);
     return this;
   }
-  setLightPosition(posX, posY, posZ, w){
-    let position = [posX, posY, posZ, w];
+  setLightPosition(posX, posY, posZ, w) {
+    let position = [posX, posY, posZ, w]; 
     this.posX = posX;
     this.posY = posY;
     this.posZ = posZ;
     glLightfv(this.light, GL_POSITION, position);
     return this;
   }
-  }
+}
