@@ -46,9 +46,9 @@
                 let treeTop = new TransformedObject(new IFSModel("Cone").setColor(.3, .6, 0)).setRotation(-90, 0, 0, 1).setScale(2);
                 let treeParts = new CompoundObject().add(trunk).add(treeTop);
                 let tree = new TransformedObject(treeParts).setScale(0.7).setTranslation(0, 3.5, 0);
-                let tree1 = new TransformedObject(tree.clone()).setTranslation(3, 0, 0);
-                let tree2 = new TransformedObject(tree.clone()).setTranslation(-6, 0, -2);
-                let tree3 = new TransformedObject(tree.clone()).setTranslation(4, 0, 4);
+                let tree1 = new TransformedObject(tree.clone()).setTranslation(0, 0, 0);
+                let tree2 = new TransformedObject(tree.clone()).setTranslation(-5, 0, -2);
+                let tree3 = new TransformedObject(tree.clone()).setTranslation(3.5, 0, 4);
 
                 //draw snowman head
                 let headContainer = new CompoundObject();
@@ -85,14 +85,15 @@
                 let ground = new TransformedObject(groundContainer).setTranslation(0, -3.5, 0);
 
                 //add snowman
-                snowman = new TransformedObject(snowmanContainer).setScale(0.3).setTranslation(0, -1.5, z);
-
+                snowman = new CompoundObject();
+                snowman.add(new TransformedObject(snowmanContainer).setScale(0.3).setRotation(90,0,1,0).setTranslation(0, -1.5, 8));
+                let movingSnowman = new TransformedObject(snowman).setRotation(z,0,1,0);
                 //scene.add(ground);
 
                 //add everything to scene
                 scene.add(cloud1);
                 scene.add(cloud2);
-                scene.add(snowman)
+                scene.add(movingSnowman)
                 scene.add(ground);
                 scene.add(a);
                 //scene.add(ground);
@@ -102,9 +103,8 @@
             // --- animation --- 
             let frameNumber;
             function updateFrame() {
-                z = 9*((frameNumber+30) % 280)/100;
+                z += 0.6;
                 let step = frameNumber;
-                console.log(frameNumber);
                 if (step > 50) {
                     step = 100 - step;
                 }
@@ -114,7 +114,7 @@
                 display();
                 glPopMatrix();
             }
-            let animating = true;
+            let animating = false;
 
             let prevTime = null;  // time since previous call to frame()
             // Note: To avoid having the animation play too fast on computers
@@ -138,6 +138,17 @@
                     draw();
                 }
                 requestAnimationFrame(frame);
+            }
+
+            function doAnimationCheckbox() {
+                let run = document.getElementById("animateCheck").checked;
+                if (run !== animating) {
+                    animating = run;
+                    if (animating) {
+                        prevTime = null;
+                        requestAnimationFrame(frame);
+                    }
+                }
             }
 
 
@@ -172,6 +183,8 @@
                     prevTime = null;
                     requestAnimationFrame(frame);
                 }
+                document.getElementById("animateCheck").checked = false;
+                document.getElementById("animateCheck").onchange = doAnimationCheckbox;
                 display();
                 frameNumber = 0;
                 updateFrame();
@@ -192,6 +205,7 @@
                 <li><a href="scene.html">Alex's Scene</a></li>
                 <li><a href="scene2.html">Reagan's Scene</a></li>
             </ul>
+            <p id="message"><label><input type="checkbox" id="animateCheck"><b>Run the Animation</b></label></p>
         </div>
     </div>
 </body>
